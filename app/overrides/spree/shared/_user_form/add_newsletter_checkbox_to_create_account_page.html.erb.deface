@@ -1,0 +1,2 @@
+<!-- insert_top "[data-hook='signup_below_password_fields']" -->
+<%= render :partial => 'spree/users/subscribe_to_newsletter_field' %>

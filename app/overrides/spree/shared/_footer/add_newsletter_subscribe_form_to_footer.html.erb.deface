@@ -1,0 +1,2 @@
+<!-- insert_top "div#footer-left" -->
+<%= render :partial => 'spree/shared/newsletter_subscribe_form' %>
