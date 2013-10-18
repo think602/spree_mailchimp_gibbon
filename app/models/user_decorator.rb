@@ -3,9 +3,15 @@ Spree::User.class_eval do
   before_create :mailchimp_add_to_mailing_list
   before_update :mailchimp_update_in_mailing_list, :if => :is_mail_list_subscriber_changed?
 
-  attr_accessible :is_mail_list_subscriber
+  def user_params
+    params.require(:user).permit(:is_mail_list_subscriber)
+  end
 
   private
+
+  def gibbon
+    @gibbon ||= Gibbon::API.new(Spree::Config[:mailchimp_api_key])
+  end
 
   # Subscribes a user to the mailing list
   #
@@ -13,19 +19,13 @@ Spree::User.class_eval do
   def mailchimp_add_to_mailing_list
     if self.is_mail_list_subscriber?
       begin
-        response = gibbon.list_member_info({:id => mailchimp_list_id, :email_address => self.email}).with_indifferent_access
-        if response[:success] == 1
-          member = response[:data][0]
-          self.mailchimp_subscriber_id = member[:id]
-        else 
-          gibbon.list_subscribe({:id => mailchimp_list_id, :email_address => self.email, :merge_vars => mailchimp_merge_vars})
-          logger.debug "Fetching new mailchimp subscriber info"
-        end
+        gibbon.lists.subscribe( { id: mailchimp_list_id, email: { email: self.email }, merge_vars: mailchimp_merge_vars,
+                                  double_optin: false, send_welcome: true } )
+        logger.debug "Fetching new mailchimp subscriber info"
 
         assign_mailchimp_subscriber_id if self.mailchimp_subscriber_id.blank?
-      rescue => ex
-	Exceptional.handle ex 
-        logger.warn "SpreeMailChimp: Failed to create contact in Mailchimp: #{ex.message}"
+      rescue Exception => ex
+        logger.warn "SpreeMailChimp: Failed to create contact in Mailchimp: #{ex.message}\n#{ex.backtrace.join("\n")}"
       end
     end
   end
@@ -37,11 +37,10 @@ Spree::User.class_eval do
     if !self.is_mail_list_subscriber? && self.mailchimp_subscriber_id.present?
       begin
         # TODO: Get rid of those magic values. Maybe add them as Spree::Config options?
-        gibbon.list_unsubscribe(mailchimp_list_id, self.email, false, false, true)
+        gibbon.lists.unsubscribe(id: mailchimp_list_id, :email => { email: self.email }, delete_member: true, send_notify: true)
         logger.debug "Removing mailchimp subscriber"
-      rescue  => ex
-        Exceptional.handle ex 
-        logger.warn "SpreeMailChimp: Failed to remove contact from Mailchimp: #{ex.message}"
+      rescue Exception => ex
+        logger.warn "SpreeMailChimp: Failed to remove contact from Mailchimp: #{ex.message}\n#{ex.backtrace.join("\n")}"
       end
     end
   end
@@ -64,15 +63,16 @@ Spree::User.class_eval do
   # Returns the Mailchimp ID
   def assign_mailchimp_subscriber_id
     begin
-      response = gibbon.list_member_info({:id => mailchimp_list_id, :email_address => [self.email]}).with_indifferent_access
+      response = gibbon.lists.member_info( { id: Spree::Config[:mailchimp_list_id], emails: [{ email: self.email }] })
 
       if response[:success] == 1
         member = response[:data][0]
+
         self.mailchimp_subscriber_id = member[:id]
       end
-    rescue  => ex
-      Exceptional.handle ex 
-      logger.warn "SpreeMailChimp: Failed to retrieve and store Mailchimp ID: #{ex.message}"
+    rescue Exception => ex
+      Exceptional.handle ex
+      logger.warn "SpreeMailChimp: Failed to retrieve and store Mailchimp ID: #{ex.message}\n#{ex.backtrace.join("\n")}"
     end
   end
 
@@ -112,14 +112,16 @@ Spree::User.class_eval do
   # TODO: Add configuration options for 'update_existing' and 'replace_interests'
   # TODO: Remove configuration options for :mailchimp_send_notify
   def mailchimp_subscription_opts
-    [Spree::Config.get(:mailchimp_double_opt_in), true, true, Spree::Config.get(:mailchimp_send_welcome)]
+    { double_optin: Spree::Config.get(:mailchimp_double_opt_in),
+      update_existing: true, replace_interests: true,
+      send_welcome: Spree::Config.get(:mailchimp_send_welcome) }
   end
 
   # Generates the merge variables for subscribing a user
   def mailchimp_merge_vars
     merge_vars = {}
     if mailchimp_merge_user_attribs = Spree::Config.get(:mailchimp_merge_vars)
-      mailchimp_merge_user_attribs.split(',').reject(&:blank?).each do |method|
+      mailchimp_merge_user_attribs.split(',').each do |method|
         merge_vars[method.upcase] = self.send(method.downcase) if @user.respond_to? method.downcase
       end
     end
