@@ -1,6 +1,4 @@
 class Spree::Admin::MailchimpGibbonSettingsController < Spree::Admin::BaseController
-  def show
-  end
 
   def update
     Spree::Config.set(params[:preferences])
