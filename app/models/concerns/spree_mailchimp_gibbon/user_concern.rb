@@ -1,34 +1,59 @@
-Spree::User.class_eval do
+# UserConcern enables you to add SpreeMailchimpGibbon user methods to your 
+# User model, whatever class it may be.
+# 
+# If you're using the 'spree_auth_devise' setup, you would include this concern 
+# in the Spree::User class by doing a class eval, EG, 
+#   
+#     Spree::User.class_eval do 
+#       include SpreeMailchimpGibbon::UserConcern
+#     end
+# 
+# Or, if your rails app does not use 'spree_auth_devise', and you have your own
+# User class, you would insert it there in the same way, EG, 
+# 
+#     class User < ActiveRecord::Base
+#       include SpreeMailchimpGibbon::UserConcern
+#     end
+# 
 
-  before_create :mailchimp_add_to_mailing_list
-  before_update :mailchimp_update_in_mailing_list, :if => :is_mail_list_subscriber_changed?
+module SpreeMailchimpGibbon
+  module UserConcern  
+    
+    extend ActiveSupport::Concern
 
-  def user_params
-    params.require(:user).permit(:is_mail_list_subscriber)
-  end
+    included do
+      before_create :mailchimp_add_to_mailing_list
+      before_update :mailchimp_update_in_mailing_list, :if => :is_mail_list_subscriber_changed?
+    end
+    
+    def testing
+      true
+    end
+    
+    def user_params
+      params.require(:user).permit(:is_mail_list_subscriber)
+    end
 
-  private
+    def gibbon
+      @gibbon ||= Gibbon::API.new(Spree::Config[:mailchimp_api_key])
+    end
 
-  def gibbon
-    @gibbon ||= Gibbon::API.new(Spree::Config[:mailchimp_api_key])
-  end
+    # Subscribes a user to the mailing list
+    #
+    # Returns ?
+    def mailchimp_add_to_mailing_list
+      if self.is_mail_list_subscriber?
+        begin
+          gibbon.lists.subscribe( { id: mailchimp_list_id, email: { email: self.email }, merge_vars: mailchimp_merge_vars,
+                                    double_optin: false, send_welcome: true } )
+          logger.debug "Fetching new mailchimp subscriber info"
 
-  # Subscribes a user to the mailing list
-  #
-  # Returns ?
-  def mailchimp_add_to_mailing_list
-    if self.is_mail_list_subscriber?
-      begin
-        gibbon.lists.subscribe( { id: mailchimp_list_id, email: { email: self.email }, merge_vars: mailchimp_merge_vars,
-                                  double_optin: false, send_welcome: true } )
-        logger.debug "Fetching new mailchimp subscriber info"
-
-        assign_mailchimp_subscriber_id if self.mailchimp_subscriber_id.blank?
-      rescue Exception => ex
-        logger.warn "SpreeMailChimp: Failed to create contact in Mailchimp: #{ex.message}\n#{ex.backtrace.join("\n")}"
+          assign_mailchimp_subscriber_id if self.mailchimp_subscriber_id.blank?
+        rescue Exception => ex
+          logger.warn "SpreeMailChimp: Failed to create contact in Mailchimp: #{ex.message}\n#{ex.backtrace.join("\n")}"
+        end
       end
     end
-  end
 
   # Removes the User from the Mailchimp mailing list
   #
@@ -128,4 +153,5 @@ Spree::User.class_eval do
     merge_vars
   end
 
+  end
 end
