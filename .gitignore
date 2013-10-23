@@ -9,3 +9,4 @@
 .project
 coverage/*
 *.swp
+Gemfile.lock
