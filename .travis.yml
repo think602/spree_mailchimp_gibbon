@@ -1,0 +1,13 @@
+language: ruby
+
+rvm:
+  - 1.9.3
+  - 2.0.0
+
+before_install:
+  - gem update --system 
+  - echo -e "Host github.com\n\tStrictHostKeyChecking no\n" >> ~/.ssh/config
+
+before_script: rake test_app
+
+script: "DISPLAY=:99.0 rake spec"
