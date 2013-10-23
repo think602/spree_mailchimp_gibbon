@@ -130,7 +130,8 @@ module SpreeMailchimpGibbon
     # TODO: Remove configuration options for :mailchimp_send_notify
     def mailchimp_subscription_opts
       { double_optin: Spree::Config.get(:mailchimp_double_opt_in),
-      update_existing: true, replace_interests: true,
+        update_existing: true, 
+        replace_interests: true,
         send_welcome: Spree::Config.get(:mailchimp_send_welcome) }
     end
 
