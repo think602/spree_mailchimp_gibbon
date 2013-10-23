@@ -26,10 +26,6 @@ module SpreeMailchimpGibbon
       before_update :mailchimp_update_in_mailing_list, :if => :is_mail_list_subscriber_changed?
     end
 
-    def user_params
-      params.require(:user).permit(:is_mail_list_subscriber)
-    end
-
     def gibbon
       @gibbon ||= Gibbon::API.new(Spree::Config[:mailchimp_api_key])
     end
