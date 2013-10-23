@@ -38,6 +38,20 @@ Or add the following line at the bottom of your javascripts/admin/all.js file:
   //= require jquery.validate/jquery.validate.min 
 </pre>
 
+Include the SpreeMailchimpGibbon user methods in your user model. If you are using SpreeAuthDevise, then do the following, 
+<code>
+  Spree::User.class_eval do
+    include SpreeMailchimpGibbon::UserConcern
+  end
+</code>
+
+Or, if you have your own user class, 
+<code>
+  class User < ActiveRecord::Base
+    include SpreeMailchimpGibbon::UserConcern
+  end
+</code>
+
 h3. Configuration
 
 See the Mail Chimp Settings forms in the Admin under Configuration.
