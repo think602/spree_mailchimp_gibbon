@@ -10,3 +10,4 @@
 coverage/*
 *.swp
 Gemfile.lock
+spec/dummy
