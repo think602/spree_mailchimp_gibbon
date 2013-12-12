@@ -4,9 +4,9 @@ Gem::Specification.new do |s|
   s.name        = 'spree_mailchimp_gibbon'
   s.version     = '0.0.8'
   s.summary     = 'Mail Chimp subscriptions for Spree using gibbon Mailchimp API wrapper'
-  s.author            = 'Jerrold Thompson'
-  s.email             = 'jet@whidbey.net'
-  s.homepage          = 'https://github.com/bluehandtalking/spree_mailchimp_gibbon'
+  s.author      = 'Jerrold Thompson'
+  s.email       = 'jet@whidbey.net'
+  s.homepage    = 'https://github.com/bluehandtalking/spree_mailchimp_gibbon'
   
   s.required_ruby_version = '>= 2.0.0'
   
@@ -17,7 +17,7 @@ Gem::Specification.new do |s|
   s.has_rdoc      = true
 
   s.add_dependency 'gibbon', '~> 1.0.4'
-  s.add_dependency 'spree_core', '~> 2.1.0'
+  s.add_dependency 'spree_core', '~> 2.1.3'
   
   s.add_development_dependency 'capybara', '~> 2.1'
   s.add_development_dependency 'coffee-rails'
