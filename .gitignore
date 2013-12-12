@@ -11,3 +11,6 @@ coverage/*
 *.swp
 Gemfile.lock
 spec/dummy
+
+.ruby-version
+.ruby-gemset
