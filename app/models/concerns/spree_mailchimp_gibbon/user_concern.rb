@@ -93,13 +93,6 @@ module SpreeMailchimpGibbon
       end
     end
 
-    # Creates an instance of Gibon
-    #
-    # Returns Gibbon
-    def gibbon
-      @gibbon ||= Gibbon.new(Spree::Config.get(:mailchimp_api_key))
-    end
-
     # Gets the Mailchimp list ID that is stored in Spree::Config
     #
     # Returns a Mailchimp list ID String
