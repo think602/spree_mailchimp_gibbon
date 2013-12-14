@@ -8,6 +8,7 @@ before_install:
   - gem update --system 
   - echo -e "Host github.com\n\tStrictHostKeyChecking no\n" >> ~/.ssh/config
 
-before_script: rake test_app
+before_script: 
+  - bundle exec rake test_app
 
 script: "DISPLAY=:99.0 rake spec"
