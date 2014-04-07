@@ -43,7 +43,7 @@ class Spree::SubscriptionsController < Spree::BaseController
     respond_to do |format|
       format.js do
         if @errors.empty?
-          flash[:success] = Spree.t(:you_have_been_subscribed)
+          flash[:success] = t(:you_have_been_subscribed)
         else
           flash[:error] = @errors.join('. ')
         end

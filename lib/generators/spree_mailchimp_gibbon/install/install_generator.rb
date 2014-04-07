@@ -6,10 +6,6 @@ module SpreeMailchimpGibbon
       class_option :auto_run_migrations, 
         type: :boolean, 
         default: false
-      
-      def copy_initializer
-        copy_file 'spree_mailchimp_gibbon.rb', 'config/initializers/spree_mailchimp_gibbon.rb'
-      end
 
       def add_javascripts
         append_file "app/assets/javascripts/store/all.js", "//= require store/spree_mailchimp_gibbon\n"
@@ -28,7 +24,7 @@ module SpreeMailchimpGibbon
         if run_migrations
           run 'rake db:migrate'
         else
-          puts "Skiping rake db:migrate, don't forget to run it!"
+          puts "Skipping rake db:migrate, don't forget to run it!"
         end
       end
       

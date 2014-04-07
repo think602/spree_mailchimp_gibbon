@@ -8,7 +8,7 @@ Gem::Specification.new do |s|
   s.email       = 'jet@whidbey.net'
   s.homepage    = 'https://github.com/bluehandtalking/spree_mailchimp_gibbon'
   
-  s.required_ruby_version = '>= 2.0.0'
+  s.required_ruby_version = '>= 1.8.7'
   
   s.files         = `git ls-files --others`.split("\n")
   s.test_files    = `git ls-files -- {test,spec,features}/*`.split("\n")
