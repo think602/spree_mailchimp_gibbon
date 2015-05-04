@@ -1,32 +1,32 @@
-# UserConcern enables you to add SpreeMailchimpGibbon user methods to your 
+# UserConcern enables you to add SpreeMailchimpGibbon user methods to your
 # User model, whatever class it may be.
-# 
-# If you're using the 'spree_auth_devise' setup, you would include this concern 
-# in the Spree::User class by doing a class eval, EG, 
-#   
-#     Spree::User.class_eval do 
+#
+# If you're using the 'spree_auth_devise' setup, you would include this concern
+# in the Spree::User class by doing a class eval, EG,
+#
+#     Spree::User.class_eval do
 #       include SpreeMailchimpGibbon::UserConcern
 #     end
-# 
+#
 # Or, if your rails app does not use 'spree_auth_devise', and you have your own
-# User class, you would insert it there in the same way, EG, 
-# 
+# User class, you would insert it there in the same way, EG,
+#
 #     class User < ActiveRecord::Base
 #       include SpreeMailchimpGibbon::UserConcern
 #     end
-# 
+#
 
 module SpreeMailchimpGibbon
-  module UserConcern  
-    
+  module UserConcern
+
     extend ActiveSupport::Concern
 
     included do
       before_create :mailchimp_add_to_mailing_list
       before_update :mailchimp_update_in_mailing_list, :if => :is_mail_list_subscriber_changed?
-      attr_accessible :is_mail_list_subscriber
+      #attr_accessible :is_mail_list_subscriber
     end
-    
+
     def gibbon
       @gibbon ||= Gibbon::API.new(Spree::Config[:mailchimp_api_key])
     end
@@ -37,11 +37,11 @@ module SpreeMailchimpGibbon
     def mailchimp_add_to_mailing_list
       if self.is_mail_list_subscriber?
         begin
-          gibbon.lists.subscribe( { id: mailchimp_list_id, 
-                                    email: { email: self.email }, 
+          gibbon.lists.subscribe( { id: mailchimp_list_id,
+                                    email: { email: self.email },
                                     merge_vars: mailchimp_merge_vars,
                                     double_optin: false, send_welcome: true } )
-          
+
           logger.debug "Fetching new mailchimp subscriber info"
 
           assign_mailchimp_subscriber_id if self.mailchimp_subscriber_id.blank?
@@ -58,11 +58,11 @@ module SpreeMailchimpGibbon
       if !self.is_mail_list_subscriber? && self.mailchimp_subscriber_id.present?
         begin
           # TODO: Get rid of those magic values. Maybe add them as Spree::Config options?
-          gibbon.lists.unsubscribe( id: mailchimp_list_id, 
-                                    email: { email: self.email }, 
-                                    delete_member: true, 
+          gibbon.lists.unsubscribe( id: mailchimp_list_id,
+                                    email: { email: self.email },
+                                    delete_member: true,
                                     send_notify: true )
-          
+
           logger.debug "Removing mailchimp subscriber"
         rescue Exception => ex
           logger.warn "SpreeMailChimp: Failed to remove contact from Mailchimp: #{ex.message}\n#{ex.backtrace.join("\n")}"
@@ -88,7 +88,7 @@ module SpreeMailchimpGibbon
     # Returns the Mailchimp ID
     def assign_mailchimp_subscriber_id
       begin
-        response = gibbon.lists.member_info({ id: Spree::Config[:mailchimp_list_id], 
+        response = gibbon.lists.member_info({ id: Spree::Config[:mailchimp_list_id],
                                               emails: [{ email: self.email }] })
 
         if response[:success] == 1
@@ -132,7 +132,7 @@ module SpreeMailchimpGibbon
     # TODO: Remove configuration options for :mailchimp_send_notify
     def mailchimp_subscription_opts
       { double_optin: Spree::Config.get(:mailchimp_double_opt_in),
-        update_existing: true, 
+        update_existing: true,
         replace_interests: true,
         send_welcome: Spree::Config.get(:mailchimp_send_welcome) }
     end
